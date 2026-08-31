@@ -1,11 +1,87 @@
 import Link from "next/link";
 
+/* ─── Inline SVG icons ──────────────────────────────────────────── */
+const ShieldIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="card-svg">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+const UserIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="card-svg">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+  </svg>
+);
+const ArrowIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="arrow-svg">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+const PhoneIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="feat-svg">
+    <rect x="5" y="2" width="14" height="20" rx="2" />
+    <circle cx="12" cy="17" r="1" />
+  </svg>
+);
+const LockIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="feat-svg">
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+const MapPinIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="feat-svg">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+    <circle cx="12" cy="9" r="2.5" />
+  </svg>
+);
+const CameraIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="feat-svg">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </svg>
+);
+const ChartIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="feat-svg">
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+    <line x1="2" y1="20" x2="22" y2="20" />
+  </svg>
+);
+const ToggleIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="feat-svg">
+    <rect x="1" y="5" width="22" height="14" rx="7" />
+    <circle cx="16" cy="12" r="3" fill="currentColor" stroke="none" />
+  </svg>
+);
+const QrIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{width:28,height:28,opacity:0.6}}>
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/>
+    <rect x="14" y="18" width="3" height="3" rx="0.5"/><rect x="18" y="14" width="3" height="3" rx="0.5"/>
+    <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+  </svg>
+);
+
+const FEATURES = [
+  { Icon: PhoneIcon,  title: "Mobile-first scanning",   body: "Works on any smartphone camera — iOS and Android. No app download needed." },
+  { Icon: LockIcon,   title: "Magic-link login",         body: "Staff log in once via a secure email link. No passwords to forget or reset." },
+  { Icon: MapPinIcon, title: "Optional geofencing",      body: "Restrict clock-ins to a set radius around your premises to prevent remote check-ins." },
+  { Icon: CameraIcon, title: "Selfie verification",      body: "Enable selfie capture at clock-in for an extra layer of identity confirmation." },
+  { Icon: ChartIcon,  title: "Attendance reports",       body: "View per-staff records with timestamps, methods, and any flagged anomalies." },
+  { Icon: ToggleIcon, title: "Two clock-in modes",       body: "One shared entrance QR for all staff, or individual personal QR codes — your choice." },
+];
+
 export default function Home() {
   return (
     <main className="landing-root">
       {/* ─── HERO ─────────────────────────────────────── */}
       <section className="hero">
-        <div className="hero-badge">✦ Attendance made effortless</div>
+        <div className="hero-badge">
+          <QrIcon />
+          <span>Attendance made effortless</span>
+        </div>
 
         <h1 className="hero-title">
           Smart QR&nbsp;
@@ -23,21 +99,21 @@ export default function Home() {
         {/* ─── Login Choice Cards ─── */}
         <div className="login-cards">
           <Link href="/admin/login" className="login-card login-card--admin">
-            <span className="card-icon">🛡️</span>
+            <ShieldIcon />
             <span className="card-label">I&apos;m an Admin</span>
             <span className="card-desc">
               Manage staff, view reports &amp; configure settings
             </span>
-            <span className="card-arrow">→</span>
+            <ArrowIcon />
           </Link>
 
           <Link href="/login" className="login-card login-card--staff">
-            <span className="card-icon">👤</span>
+            <UserIcon />
             <span className="card-label">I&apos;m Staff</span>
             <span className="card-desc">
               Log in once — after that, just scan your workplace QR
             </span>
-            <span className="card-arrow">→</span>
+            <ArrowIcon />
           </Link>
         </div>
       </section>
@@ -87,7 +163,7 @@ export default function Home() {
         <div className="feature-grid">
           {FEATURES.map((f) => (
             <div key={f.title} className="feature-card">
-              <span className="feature-icon">{f.icon}</span>
+              <f.Icon />
               <h3 className="feature-title">{f.title}</h3>
               <p className="feature-body">{f.body}</p>
             </div>
@@ -108,7 +184,21 @@ export default function Home() {
 
       {/* ─── FOOTER ───────────────────────────────────── */}
       <footer className="landing-footer">
-        <span>© {new Date().getFullYear()} QR Attendance</span>
+        <div className="footer-brand">
+          <span className="footer-coreva">
+            Built by{" "}
+            <a href="https://apextrackgh.com" target="_blank" rel="noopener noreferrer" className="footer-apex-link">
+              Coreva Ltd
+            </a>
+          </span>
+          <span className="footer-divider">·</span>
+          <span className="footer-product">
+            First product:{" "}
+            <a href="https://apextrackgh.com" target="_blank" rel="noopener noreferrer" className="footer-apex-link footer-apex-highlight">
+              ApexTrack GH
+            </a>
+          </span>
+        </div>
         <div className="footer-links">
           <Link href="/admin/login">Admin login</Link>
           <Link href="/login">Staff login</Link>
@@ -126,6 +216,11 @@ export default function Home() {
           color: #1a1040;
           overflow-x: hidden;
         }
+
+        /* ── SVG icon sizing ── */
+        .card-svg  { width: 2rem; height: 2rem; color: rgba(255,255,255,0.9); margin-bottom: 0.25rem; flex-shrink: 0; }
+        .arrow-svg { width: 1.1rem; height: 1.1rem; color: rgba(255,255,255,0.55); margin-top: 0.5rem; transition: transform 0.18s ease, color 0.18s ease; }
+        .feat-svg  { width: 1.9rem; height: 1.9rem; color: #a78bfa; margin-bottom: 0.75rem; display: block; }
 
         /* ── HERO ── */
         .hero {
@@ -153,15 +248,17 @@ export default function Home() {
         .hero > * { position: relative; z-index: 1; }
 
         .hero-badge {
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
           background: rgba(124, 58, 237, 0.15);
-          color: #7c3aed;
+          color: #a78bfa;
           border: 1px solid rgba(124, 58, 237, 0.3);
           border-radius: 999px;
           font-size: 0.78rem;
           font-weight: 600;
           letter-spacing: 0.04em;
-          padding: 0.35rem 1rem;
+          padding: 0.35rem 1rem 0.35rem 0.6rem;
           margin-bottom: 1.75rem;
         }
 
@@ -206,7 +303,7 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          gap: 0.35rem;
+          gap: 0.3rem;
           padding: 1.4rem 1.25rem;
           border-radius: 1.1rem;
           text-decoration: none;
@@ -224,10 +321,8 @@ export default function Home() {
           pointer-events: none;
         }
 
-        .login-card:hover {
-          transform: translateY(-3px) scale(1.01);
-          box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-        }
+        .login-card:hover { transform: translateY(-3px) scale(1.01); box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+        .login-card:hover .arrow-svg { transform: translateX(4px); color: #fff; }
 
         .login-card--admin {
           background: linear-gradient(135deg, rgba(109,40,217,0.9), rgba(79,70,229,0.85));
@@ -239,24 +334,11 @@ export default function Home() {
           backdrop-filter: blur(12px);
         }
 
-        .card-icon { font-size: 1.6rem; margin-bottom: 0.2rem; }
         .card-label { font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
-        .card-desc { font-size: 0.8rem; color: rgba(255,255,255,0.68); line-height: 1.4; text-align: left; }
-
-        .card-arrow {
-          margin-top: 0.5rem;
-          font-size: 1rem;
-          color: rgba(255,255,255,0.55);
-          transition: transform 0.18s ease, color 0.18s ease;
-        }
-        .login-card:hover .card-arrow { transform: translateX(4px); color: #fff; }
+        .card-desc  { font-size: 0.8rem; color: rgba(255,255,255,0.68); line-height: 1.4; text-align: left; }
 
         /* ── HOW IT WORKS ── */
-        .how-section {
-          background: #1a1040;
-          padding: 5rem 1.25rem;
-          text-align: center;
-        }
+        .how-section { background: #1a1040; padding: 5rem 1.25rem; text-align: center; }
 
         .section-title {
           font-size: clamp(1.6rem, 5vw, 2.4rem);
@@ -270,7 +352,6 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          gap: 0;
           max-width: 56rem;
           margin: 0 auto;
           flex-wrap: wrap;
@@ -290,7 +371,7 @@ export default function Home() {
         }
 
         .step-heading { font-size: 1.05rem; font-weight: 700; color: #f8f6ff; margin: 0 0 0.5rem; }
-        .step-body { font-size: 0.88rem; color: rgba(248,246,255,0.58); line-height: 1.6; margin: 0; }
+        .step-body    { font-size: 0.88rem; color: rgba(248,246,255,0.58); line-height: 1.6; margin: 0; }
 
         .step-divider {
           width: 2px;
@@ -335,9 +416,8 @@ export default function Home() {
           transform: translateY(-2px);
         }
 
-        .feature-icon { font-size: 1.8rem; display: block; margin-bottom: 0.75rem; }
         .feature-title { font-size: 0.95rem; font-weight: 700; color: #f8f6ff; margin: 0 0 0.4rem; }
-        .feature-body { font-size: 0.83rem; color: rgba(248,246,255,0.55); line-height: 1.55; margin: 0; }
+        .feature-body  { font-size: 0.83rem; color: rgba(248,246,255,0.55); line-height: 1.55; margin: 0; }
 
         /* ── CTA ── */
         .cta-section {
@@ -347,7 +427,7 @@ export default function Home() {
         }
 
         .cta-title { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900; color: #fff; margin: 0 0 0.75rem; letter-spacing: -0.025em; }
-        .cta-sub { font-size: 1.05rem; color: rgba(255,255,255,0.75); margin: 0 0 2.25rem; }
+        .cta-sub   { font-size: 1.05rem; color: rgba(255,255,255,0.75); margin: 0 0 2.25rem; }
 
         .cta-btn {
           display: inline-block;
@@ -369,52 +449,45 @@ export default function Home() {
           background: #0a0620;
           color: rgba(248,246,255,0.4);
           font-size: 0.82rem;
-          padding: 1.5rem 1.25rem;
+          padding: 1.75rem 1.5rem;
           display: flex;
           align-items: center;
           justify-content: space-between;
           flex-wrap: wrap;
-          gap: 0.75rem;
+          gap: 1rem;
+        }
+
+        .footer-brand {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          flex-wrap: wrap;
+        }
+
+        .footer-coreva  { color: rgba(248,246,255,0.5); }
+        .footer-divider { color: rgba(248,246,255,0.25); }
+        .footer-product { color: rgba(248,246,255,0.5); }
+
+        .footer-apex-link {
+          color: #a78bfa;
+          text-decoration: none;
+          font-weight: 600;
+          transition: color 0.15s;
+        }
+
+        .footer-apex-link:hover { color: #c4b5fd; }
+
+        .footer-apex-highlight {
+          background: linear-gradient(90deg, #a78bfa, #60a5fa);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .footer-links { display: flex; gap: 1.5rem; }
-        .footer-links a { color: rgba(248,246,255,0.5); text-decoration: none; transition: color 0.15s; }
+        .footer-links a { color: rgba(248,246,255,0.45); text-decoration: none; transition: color 0.15s; }
         .footer-links a:hover { color: #a78bfa; }
       `}</style>
     </main>
   );
 }
-
-const FEATURES = [
-  {
-    icon: "📱",
-    title: "Mobile-first scanning",
-    body: "Works on any smartphone camera — iOS and Android. No app download needed.",
-  },
-  {
-    icon: "🔐",
-    title: "Magic-link login",
-    body: "Staff log in once via a secure email link. No passwords to forget or reset.",
-  },
-  {
-    icon: "🗺️",
-    title: "Optional geofencing",
-    body: "Restrict clock-ins to a set radius around your premises to prevent remote check-ins.",
-  },
-  {
-    icon: "🤳",
-    title: "Selfie verification",
-    body: "Enable selfie capture at clock-in for an extra layer of identity confirmation.",
-  },
-  {
-    icon: "📊",
-    title: "Attendance reports",
-    body: "View per-staff records with timestamps, methods, and any flagged anomalies.",
-  },
-  {
-    icon: "⚡",
-    title: "Two clock-in modes",
-    body: "One shared entrance QR for all staff, or individual personal QR codes — your choice.",
-  },
-];
-
