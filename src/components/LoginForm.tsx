@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginForm({
@@ -20,11 +21,40 @@ export default function LoginForm({
   orgLogoUrl?: string | null;
 }) {
   const [email, setEmail] = useState("");
-  const [linkSent, setLinkSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [useMagicLink, setUseMagicLink] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
+  const router = useRouter();
   const supabase = createClient();
+
+  async function handlePasswordLogin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    setLoading(true);
+    setError(null);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setLoading(false);
+      setError(
+        error.message === "Invalid login credentials"
+          ? "Invalid email or password. Please verify the credentials issued by your administrator."
+          : error.message
+      );
+    } else if (data.session) {
+      router.push(next);
+      router.refresh();
+    }
+  }
 
   async function sendMagicLink(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +74,7 @@ export default function LoginForm({
 
     setLoading(false);
     if (error) setError(error.message);
-    else setLinkSent(true);
+    else setMagicLinkSent(true);
   }
 
   const isAdmin = role === "admin";
@@ -102,21 +132,85 @@ export default function LoginForm({
           <p className="login-subtext">{subtext}</p>
 
           {/* Special notice for staff */}
-          {!isAdmin && (
+          {!isAdmin && !useMagicLink && (
             <div className="staff-notice">
-              <div className="notice-icon">💡</div>
+              <div className="notice-icon">🔐</div>
               <div className="notice-text">
-                <span className="font-semibold block text-indigo-200">Admin-Issued Access</span>
-                Your workplace admin must add you to their staff roster before you can log in. Use the email registered by your admin.
+                <span className="font-semibold block text-indigo-200">Admin-Issued Login</span>
+                Enter the email and password provided to you by your workplace administrator.
               </div>
             </div>
           )}
 
-          {!linkSent ? (
+          {!useMagicLink ? (
+            /* ── Username/Email + Password Form ── */
+            <form onSubmit={handlePasswordLogin} className="login-form">
+              <div className="flex flex-col gap-1.5">
+                <label className="input-label">
+                  {isAdmin ? "Admin Email Address" : "Staff Email / Username"}
+                </label>
+                <div className="input-wrapper">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="input-icon">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  <input
+                    type="email"
+                    required
+                    placeholder={isAdmin ? "admin@company.com" : "jane@company.com"}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="login-input"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="input-label">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-[11px] text-purple-300 hover:text-white"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <div className="input-wrapper">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="input-icon">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="login-input"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !email || !password}
+                className={`login-submit-btn ${isAdmin ? "btn-admin" : "btn-staff"}`}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="spinner" /> Signing in...
+                  </span>
+                ) : (
+                  <span>Sign In →</span>
+                )}
+              </button>
+            </form>
+          ) : !magicLinkSent ? (
+            /* ── Magic Link Alternative Form ── */
             <form onSubmit={sendMagicLink} className="login-form">
-              <label className="input-label">
-                {isAdmin ? "Admin Email Address" : "Registered Staff Email"}
-              </label>
+              <label className="input-label">Email Address</label>
               <div className="input-wrapper">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="input-icon">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -125,11 +219,10 @@ export default function LoginForm({
                 <input
                   type="email"
                   required
-                  placeholder={isAdmin ? "admin@company.com" : "your.email@workplace.com"}
+                  placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="login-input"
-                  autoFocus
                 />
               </div>
 
@@ -138,34 +231,34 @@ export default function LoginForm({
                 disabled={loading || !email}
                 className={`login-submit-btn ${isAdmin ? "btn-admin" : "btn-staff"}`}
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="spinner" /> Sending secure link...
-                  </span>
-                ) : (
-                  <span>Send Sign-In Link →</span>
-                )}
+                {loading ? "Sending..." : "Send Email Login Link →"}
               </button>
             </form>
           ) : (
             <div className="success-box">
               <div className="success-check">✓</div>
-              <h3 className="text-base font-semibold text-white">Sign-in link sent!</h3>
+              <h3 className="text-base font-semibold text-white">Login link sent!</h3>
               <p className="text-sm text-purple-200">
-                We sent a secure one-time link to <span className="font-medium text-white">{email}</span>.
+                Check your email at <span className="font-medium text-white">{email}</span>.
               </p>
-              <p className="text-xs text-purple-300/80 bg-purple-900/40 p-3 rounded-lg border border-purple-500/30">
-                Tap the link directly on this phone to finish logging in.
-              </p>
-              <button
-                type="button"
-                onClick={() => setLinkSent(false)}
-                className="text-xs text-purple-300 underline mt-2 hover:text-white"
-              >
-                Use a different email
-              </button>
             </div>
           )}
+
+          {/* Toggle between password and magic link */}
+          <div className="text-center mt-3">
+            <button
+              type="button"
+              onClick={() => {
+                setUseMagicLink(!useMagicLink);
+                setError(null);
+              }}
+              className="text-xs text-purple-300/80 hover:text-white underline"
+            >
+              {useMagicLink
+                ? "← Sign in with Password"
+                : "Trouble with password? Sign in with Email link"}
+            </button>
+          </div>
 
           {error && (
             <div className="error-box">
@@ -177,6 +270,7 @@ export default function LoginForm({
               <span>{error}</span>
             </div>
           )}
+
 
           {/* Quick Helper footer within card */}
           <div className="card-footer">

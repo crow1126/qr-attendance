@@ -5,14 +5,12 @@ import {
   updateStaffAction,
   toggleStaffActiveAction,
   deleteStaffAction,
-  sendStaffInviteAction,
+  setStaffPasswordAction,
   type ActionState,
-  type InviteActionState,
 } from "@/app/admin/actions";
 import StaffQrButton from "@/components/StaffQrButton";
 
 const initialState: ActionState = {};
-const initialInviteState: InviteActionState = {};
 
 type Staff = {
   id: string;
@@ -32,6 +30,8 @@ export default function StaffRow({
   orgId: string;
 }) {
   const [editing, setEditing] = useState(false);
+  const [changingPass, setChangingPass] = useState(false);
+  const [newPass, setNewPass] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [updateState, updateAction, updating] = useActionState(
@@ -46,17 +46,25 @@ export default function StaffRow({
     deleteStaffAction,
     initialState
   );
-  const [inviteState, inviteAction, inviting] = useActionState(
-    sendStaffInviteAction,
-    initialInviteState
+  const [passState, passAction, passPending] = useActionState(
+    setStaffPasswordAction,
+    initialState
   );
 
   useEffect(() => {
     if (updateState.success) setEditing(false);
   }, [updateState]);
 
-  function handleCopy(link: string) {
-    navigator.clipboard.writeText(link).then(() => {
+  useEffect(() => {
+    if (passState.success) {
+      setChangingPass(false);
+      setNewPass("");
+    }
+  }, [passState]);
+
+  function handleCopyCredentials(email: string) {
+    const text = `Staff Login for ${staff.name}:\nPortal: ${window.location.origin}/login\nUsername/Email: ${email}`;
+    navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     });
@@ -70,7 +78,7 @@ export default function StaffRow({
         <td colSpan={colSpan} className="py-2">
           <form
             action={updateAction}
-            className="flex flex-col sm:flex-row gap-2 sm:items-center flex-wrap"
+            className="flex flex-col sm:flex-row gap-2 sm:items-center flex-wrap bg-gray-50 p-2 rounded-lg"
           >
             <input type="hidden" name="staffId" value={staff.id} />
             <input
@@ -78,13 +86,15 @@ export default function StaffRow({
               defaultValue={staff.name}
               required
               className="border rounded-lg px-2 py-1 text-sm flex-1 min-w-[120px]"
+              placeholder="Name"
             />
             <input
               name="email"
               type="email"
               defaultValue={staff.email ?? ""}
+              required
               className="border rounded-lg px-2 py-1 text-sm flex-1 min-w-[160px]"
-              placeholder="Email"
+              placeholder="Email (Login Username)"
             />
             <input
               name="phone"
@@ -95,14 +105,14 @@ export default function StaffRow({
             <button
               type="submit"
               disabled={updating}
-              className="text-xs bg-gray-800 text-white rounded px-3 py-1.5 disabled:opacity-50"
+              className="text-xs bg-indigo-600 text-white rounded px-3 py-1.5 disabled:opacity-50 font-medium"
             >
               {updating ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="text-xs underline text-gray-400"
+              className="text-xs underline text-gray-500"
             >
               Cancel
             </button>
@@ -120,9 +130,24 @@ export default function StaffRow({
   return (
     <>
       <tr className="border-b">
-        <td className="py-2">{staff.name}</td>
-        <td>{staff.email ?? staff.phone ?? "-"}</td>
-        <td>{staff.active ? "Active" : "Inactive"}</td>
+        <td className="py-3 font-medium text-gray-900">{staff.name}</td>
+        <td>
+          <div className="flex flex-col">
+            <span className="text-gray-900 font-mono text-xs">{staff.email ?? "-"}</span>
+            {staff.phone && <span className="text-gray-400 text-xs">{staff.phone}</span>}
+          </div>
+        </td>
+        <td>
+          <span
+            className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${
+              staff.active
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-600"
+            }`}
+          >
+            {staff.active ? "Active" : "Inactive"}
+          </span>
+        </td>
         {showQr && (
           <td>
             <StaffQrButton staffId={staff.id} />
@@ -133,23 +158,28 @@ export default function StaffRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-xs underline text-gray-500"
+              className="text-xs text-gray-600 hover:text-indigo-600 underline"
             >
               Edit
             </button>
 
-            {/* ── Send Login Link ── */}
-            <form action={inviteAction}>
-              <input type="hidden" name="email" value={staff.email ?? ""} />
-              <input type="hidden" name="orgId" value={orgId} />
+            <button
+              type="button"
+              onClick={() => setChangingPass(!changingPass)}
+              className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium"
+            >
+              {changingPass ? "Close Password" : "Set Password"}
+            </button>
+
+            {staff.email && (
               <button
-                type="submit"
-                disabled={inviting}
-                className="text-xs underline text-indigo-600 disabled:opacity-50"
+                type="button"
+                onClick={() => handleCopyCredentials(staff.email!)}
+                className="text-xs text-indigo-600 hover:text-indigo-800 underline"
               >
-                {inviting ? "Generating…" : "Send Login"}
+                {copied ? "Copied!" : "Copy Login Info"}
               </button>
-            </form>
+            )}
 
             <form action={toggleAction}>
               <input type="hidden" name="staffId" value={staff.id} />
@@ -161,7 +191,7 @@ export default function StaffRow({
               <button
                 type="submit"
                 disabled={toggling}
-                className="text-xs underline text-gray-500 disabled:opacity-50"
+                className="text-xs text-gray-500 hover:text-gray-700 underline disabled:opacity-50"
               >
                 {staff.active ? "Deactivate" : "Activate"}
               </button>
@@ -172,7 +202,7 @@ export default function StaffRow({
               onSubmit={(e) => {
                 if (
                   !confirm(
-                    `Delete ${staff.name}? This also permanently deletes their attendance history.`
+                    `Delete ${staff.name}? This will remove their account and attendance history.`
                   )
                 ) {
                   e.preventDefault();
@@ -183,7 +213,7 @@ export default function StaffRow({
               <button
                 type="submit"
                 disabled={deleting}
-                className="text-xs underline text-red-500 disabled:opacity-50"
+                className="text-xs text-red-500 hover:text-red-700 underline disabled:opacity-50"
               >
                 Delete
               </button>
@@ -191,57 +221,57 @@ export default function StaffRow({
           </div>
 
           {toggleState.error && (
-            <p className="text-xs text-red-600">{toggleState.error}</p>
+            <p className="text-xs text-red-600 mt-1">{toggleState.error}</p>
           )}
           {deleteState.error && (
-            <p className="text-xs text-red-600">{deleteState.error}</p>
-          )}
-          {inviteState.error && (
-            <p className="text-xs text-red-600 mt-1">{inviteState.error}</p>
+            <p className="text-xs text-red-600 mt-1">{deleteState.error}</p>
           )}
         </td>
       </tr>
 
-      {/* ── Invite link row (shown below staff row when link is ready) ── */}
-      {inviteState.inviteLink && (
-        <tr className="bg-indigo-50 border-b">
-          <td colSpan={colSpan} className="py-2 px-3">
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-semibold text-indigo-700">
-                ✓ Login link for {staff.name} — share this via WhatsApp, SMS, or email:
-              </p>
-              <div className="flex gap-2 items-center flex-wrap">
-                <input
-                  readOnly
-                  value={inviteState.inviteLink}
-                  className="text-xs border border-indigo-200 rounded px-2 py-1 bg-white flex-1 min-w-0 font-mono"
-                  onFocus={(e) => e.target.select()}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleCopy(inviteState.inviteLink!)}
-                  className="text-xs bg-indigo-600 text-white rounded px-3 py-1 whitespace-nowrap hover:bg-indigo-700 transition-colors"
-                >
-                  {copied ? "Copied!" : "Copy link"}
-                </button>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `Hi ${staff.name}, here is your login link for our attendance system: ${inviteState.inviteLink}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs bg-green-600 text-white rounded px-3 py-1 whitespace-nowrap hover:bg-green-700 transition-colors"
-                >
-                  Share via WhatsApp
-                </a>
-              </div>
-              <p className="text-xs text-indigo-500">
-                This link is single-use and expires after the staff member logs in.
-              </p>
-            </div>
+      {/* ── Set Password form (shown below staff row when toggled) ── */}
+      {changingPass && (
+        <tr className="bg-indigo-50/70 border-b">
+          <td colSpan={colSpan} className="py-2.5 px-3">
+            <form action={passAction} className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <input type="hidden" name="staffId" value={staff.id} />
+              <input type="hidden" name="orgId" value={orgId} />
+              <span className="text-xs font-semibold text-indigo-900 whitespace-nowrap">
+                New Password for {staff.name}:
+              </span>
+              <input
+                name="password"
+                type="text"
+                required
+                minLength={6}
+                value={newPass}
+                onChange={(e) => setNewPass(e.target.value)}
+                placeholder="Min 6 chars (e.g. NewPass123)"
+                className="border border-indigo-300 rounded px-2.5 py-1 text-xs bg-white font-mono flex-1 max-w-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <button
+                type="submit"
+                disabled={passPending || !newPass}
+                className="text-xs bg-indigo-600 text-white rounded px-3 py-1 font-medium disabled:opacity-50 hover:bg-indigo-700"
+              >
+                {passPending ? "Updating..." : "Save Password"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setChangingPass(false)}
+                className="text-xs text-gray-500 underline"
+              >
+                Cancel
+              </button>
+
+              {passState.error && (
+                <span className="text-xs text-red-600">{passState.error}</span>
+              )}
+            </form>
           </td>
         </tr>
       )}
     </>
   );
 }
+

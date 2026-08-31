@@ -52,15 +52,49 @@ export async function createStaffAction(
   const name = (formData.get("name") as string)?.trim();
   const email = (formData.get("email") as string)?.trim();
   const phone = (formData.get("phone") as string)?.trim();
+  const password = (formData.get("password") as string)?.trim();
 
   if (!orgId || !name) return { error: "Name is required" };
+  if (!email) return { error: "Email is required to issue a login" };
+  if (!password || password.length < 6) {
+    return { error: "Password must be at least 6 characters" };
+  }
 
   const supabase = await createClient();
+  const service = createServiceClient();
+
+  // 1. Create or get Supabase Auth User with the issued password
+  let authUserId: string | null = null;
+  const { data: newUser, error: createAuthErr } =
+    await service.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+
+  if (createAuthErr) {
+    // If user already exists in auth, update their password and get their user ID
+    const { data: userList } = await service.auth.admin.listUsers();
+    const existing = userList?.users?.find(
+      (u) => u.email?.toLowerCase() === email.toLowerCase()
+    );
+    if (existing) {
+      authUserId = existing.id;
+      await service.auth.admin.updateUserById(existing.id, { password });
+    } else {
+      return { error: `Auth Error: ${createAuthErr.message}` };
+    }
+  } else if (newUser?.user) {
+    authUserId = newUser.user.id;
+  }
+
+  // 2. Insert Staff Record with linked auth_user_id
   const { error } = await supabase.from("staff").insert({
     org_id: orgId,
     name,
-    email: email || null,
+    email,
     phone: phone || null,
+    auth_user_id: authUserId,
   });
 
   if (error) return { error: error.message };
@@ -68,6 +102,55 @@ export async function createStaffAction(
   revalidatePath("/admin");
   return ok;
 }
+
+export async function setStaffPasswordAction(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const staffId = formData.get("staffId") as string;
+  const newPassword = (formData.get("password") as string)?.trim();
+  const orgId = formData.get("orgId") as string;
+
+  if (!staffId || !newPassword) return { error: "Missing required fields" };
+  if (newPassword.length < 6) return { error: "Password must be at least 6 characters" };
+
+  const supabase = await createClient();
+  const service = createServiceClient();
+
+  const { data: staff } = await supabase
+    .from("staff")
+    .select("id, email, auth_user_id")
+    .eq("id", staffId)
+    .single();
+
+  if (!staff || !staff.email) return { error: "Staff email not found" };
+
+  if (staff.auth_user_id) {
+    const { error } = await service.auth.admin.updateUserById(
+      staff.auth_user_id,
+      { password: newPassword }
+    );
+    if (error) return { error: error.message };
+  } else {
+    // Create new auth user
+    const { data: newUser, error: createErr } =
+      await service.auth.admin.createUser({
+        email: staff.email,
+        password: newPassword,
+        email_confirm: true,
+      });
+    if (createErr) return { error: createErr.message };
+
+    await supabase
+      .from("staff")
+      .update({ auth_user_id: newUser.user.id })
+      .eq("id", staff.id);
+  }
+
+  revalidatePath("/admin");
+  return ok;
+}
+
 
 export async function updateStaffAction(
   _prevState: ActionState,
