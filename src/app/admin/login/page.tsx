@@ -14,8 +14,9 @@ export default async function AdminLoginPage({
   return (
     <LoginForm
       next={next ?? "/admin"}
-      heading="Admin Login"
-      subtext="Log in to manage your organization's attendance settings, staff, and reports."
+      role="admin"
+      heading="Admin Workspace Login"
+      subtext="Sign in to manage your organization's attendance, staff roster, and live reports."
     />
   );
-}
+}

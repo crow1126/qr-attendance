@@ -35,8 +35,9 @@ export default async function LoginPage({
   return (
     <LoginForm
       next={nextPath}
-      heading="Staff Login"
-      subtext="One-time login. After this, scanning your workplace QR will auto-identify you."
+      role="staff"
+      heading="Staff Sign In"
+      subtext="Access your workplace attendance portal and clock-in history."
       orgName={orgName}
       orgLogoUrl={orgLogoUrl}
     />
