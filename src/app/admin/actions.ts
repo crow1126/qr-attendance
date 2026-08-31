@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
 export type ActionState = { error?: string; success?: boolean };
+export type InviteActionState = ActionState & { inviteLink?: string };
 const ok: ActionState = { success: true };
 
 // One-time bootstrap: the first time a logged-in user visits /admin with no
@@ -164,3 +165,59 @@ export async function uploadLogoAction(
   revalidatePath("/admin");
   return ok;
 }
+
+// Admin generates a one-time login link for a staff member.
+// Uses the Supabase Admin API (service role) so no email is required to be
+// configured — the admin copies the link and shares it however they like
+// (WhatsApp, SMS, email, print, etc.).
+export async function sendStaffInviteAction(
+  _prevState: InviteActionState,
+  formData: FormData
+): Promise<InviteActionState> {
+  const email = (formData.get("email") as string)?.trim();
+  const orgId = formData.get("orgId") as string;
+
+  if (!email) {
+    return {
+      error:
+        "This staff member has no email address. Edit their record to add one first.",
+    };
+  }
+
+  // Verify the caller is actually an admin of this org.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: adminRow } = await supabase
+    .from("org_admins")
+    .select("org_id")
+    .eq("org_id", orgId)
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (!adminRow) return { error: "You are not an admin of this organization." };
+
+  // Generate a magic-link using the service-role admin API.
+  // This doesn't send any email — it just returns the link.
+  const service = createServiceClient();
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    "http://localhost:3000";
+
+  const { data, error } = await service.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: {
+      redirectTo: `${appUrl}/auth/callback?next=/scan/${orgId}`,
+    },
+  });
+
+  if (error || !data?.properties?.action_link) {
+    return { error: error?.message ?? "Could not generate login link." };
+  }
+
+  return { success: true, inviteLink: data.properties.action_link };
+}

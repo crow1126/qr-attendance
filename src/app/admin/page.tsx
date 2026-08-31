@@ -147,7 +147,7 @@ export default async function AdminPage() {
           </thead>
           <tbody>
             {staffList?.map((s) => (
-              <StaffRow key={s.id} staff={s} showQr={showQr} />
+              <StaffRow key={s.id} staff={s} showQr={showQr} orgId={orgId} />
             ))}
           </tbody>
         </table>
